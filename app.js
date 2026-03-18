@@ -29,7 +29,7 @@ const I18N = {
     export_title: "エクスポート",
     export_desc: "全カードをJSON形式でダウンロードします。",
     export_btn: "エクスポート",
-    import_title: "インポート",
+    import_title: "インポート（JSON）",
     import_desc: "JSONファイルからカードを読み込みます。既存カードとマージされます。",
     import_btn: "インポート",
     about_title: "このアプリについて",
@@ -44,6 +44,14 @@ const I18N = {
     no_cards: "カードがまだありません。「カード管理」タブから追加してください。",
     review_complete: "今日の復習が完了しました！",
     review_progress: "/ {total} 枚目",
+    bulk_import_title: "テキスト一括インポート",
+    bulk_import_desc: "「Q: 質問」「A: 答え」の形式で貼り付けてください。1組ずつ改行で区切ります。",
+    bulk_import_placeholder: "Q: 日本の首都は？\nA: 東京\n\nQ: フランスの首都は？\nA: パリ",
+    bulk_import_btn: "一括インポート",
+    bulk_import_success: "件のカードを一括追加しました",
+    bulk_import_error: "Q:/A: の形式で正しく入力してください。",
+    reverse_mode: "リバースモード（裏→表）",
+    repetition_label: "周回",
   },
   en: {
     app_name: "Memory Cards",
@@ -69,7 +77,7 @@ const I18N = {
     export_title: "Export",
     export_desc: "Download all cards as a JSON file.",
     export_btn: "Export",
-    import_title: "Import",
+    import_title: "Import (JSON)",
     import_desc: "Load cards from a JSON file. They will be merged with existing cards.",
     import_btn: "Import",
     about_title: "About This App",
@@ -84,6 +92,14 @@ const I18N = {
     no_cards: "No cards yet. Add some from the Manage Cards tab.",
     review_complete: "Today's review is complete!",
     review_progress: "/ {total}",
+    bulk_import_title: "Bulk Text Import",
+    bulk_import_desc: "Paste in \"Q: question\" / \"A: answer\" format. Separate each pair with a blank line.",
+    bulk_import_placeholder: "Q: What is the capital of Japan?\nA: Tokyo\n\nQ: What is the capital of France?\nA: Paris",
+    bulk_import_btn: "Bulk Import",
+    bulk_import_success: "cards bulk-imported",
+    bulk_import_error: "Please use the Q: / A: format correctly.",
+    reverse_mode: "Reverse mode (Back → Front)",
+    repetition_label: "Rep",
   }
 };
 
@@ -187,6 +203,15 @@ function saveCards(cards) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
 }
 
+// --- Reverse Mode ---
+let reverseMode = localStorage.getItem("kf-mc-reverse") === "true";
+
+function toggleReverseMode() {
+  reverseMode = document.getElementById("reverse-toggle").checked;
+  localStorage.setItem("kf-mc-reverse", reverseMode);
+  startReview();
+}
+
 // --- Review Logic ---
 let reviewQueue = [];
 let reviewIndex = 0;
@@ -240,8 +265,14 @@ function showCurrentCard() {
   container.style.display = "";
 
   const card = reviewQueue[reviewIndex];
-  document.getElementById("card-front-text").textContent = card.front;
-  document.getElementById("card-back-text").textContent = card.back;
+  // Reverse mode: show back on front side, front on back side
+  if (reverseMode) {
+    document.getElementById("card-front-text").textContent = card.back;
+    document.getElementById("card-back-text").textContent = card.front;
+  } else {
+    document.getElementById("card-front-text").textContent = card.front;
+    document.getElementById("card-back-text").textContent = card.back;
+  }
   document.getElementById("review-progress-text").textContent =
     (reviewIndex + 1) + " " + t("review_progress").replace("{total}", reviewQueue.length);
 }
@@ -316,7 +347,7 @@ function renderCardList() {
       <div class="card-item-text">
         <div class="card-item-front">${escHtml(c.front)}</div>
         <div class="card-item-back">${escHtml(c.back)}</div>
-        <div class="card-item-meta">${t("next_review")}: ${dueText}</div>
+        <div class="card-item-meta">${t("next_review")}: ${dueText} | ${t("repetition_label")}: ${c.repetition}</div>
       </div>
       <div class="card-item-actions">
         <button class="btn btn-sm btn-danger-outline" onclick="deleteCard('${c.id}')">&times;</button>
@@ -385,6 +416,53 @@ function importCards() {
   reader.readAsText(file);
 }
 
+// --- Bulk Text Import ---
+function bulkImportCards() {
+  const textarea = document.getElementById("bulk-import-text");
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  // Parse Q:/A: pairs. Support both blank-line separation and consecutive Q/A lines.
+  const lines = text.split("\n");
+  const pairs = [];
+  let currentQ = null;
+  let currentA = null;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (line.match(/^Q[:：]\s*/i)) {
+      // If we have a pending pair, save it
+      if (currentQ !== null && currentA !== null) {
+        pairs.push({ q: currentQ, a: currentA });
+      }
+      currentQ = line.replace(/^Q[:：]\s*/i, "").trim();
+      currentA = null;
+    } else if (line.match(/^A[:：]\s*/i)) {
+      currentA = line.replace(/^A[:：]\s*/i, "").trim();
+    }
+  }
+  // Save last pair
+  if (currentQ !== null && currentA !== null) {
+    pairs.push({ q: currentQ, a: currentA });
+  }
+
+  if (pairs.length === 0) {
+    alert(t("bulk_import_error"));
+    return;
+  }
+
+  const cards = loadCards();
+  for (const pair of pairs) {
+    cards.push(createCard(pair.q, pair.a));
+  }
+  saveCards(cards);
+  textarea.value = "";
+  renderCardList();
+  updateStats();
+  startReview();
+  alert(pairs.length + " " + t("bulk_import_success"));
+}
+
 // --- Swipe Detection ---
 let touchStartX = 0;
 let touchStartY = 0;
@@ -433,6 +511,13 @@ function showTab(tabName) {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("lang-select").value = currentLang;
   document.documentElement.lang = currentLang;
+
+  // Restore reverse mode toggle
+  const reverseToggle = document.getElementById("reverse-toggle");
+  if (reverseToggle) {
+    reverseToggle.checked = reverseMode;
+  }
+
   applyI18n();
   updateStats();
   startReview();
