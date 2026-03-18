@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KF-MemoryCards</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="kf-header">
+    <div class="kf-header-left">
+      <span class="kf-logo">KF</span>
+      <span class="kf-app-name" data-i18n="app_name">暗記カード</span>
+    </div>
+    <select id="lang-select" onchange="setLang(this.value)">
+      <option value="ja">日本語</option>
+      <option value="en">English</option>
+    </select>
+  </header>
+  <p class="kf-tagline" data-i18n="app_tagline">忘却曲線に基づくスマート暗記カード</p>
+  <hr class="kf-divider">
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="review" data-i18n="tab_review" onclick="showTab('review')">今日の復習</button>
+    <button class="tab" data-tab="manage" data-i18n="tab_manage" onclick="showTab('manage')">カード管理</button>
+    <button class="tab" data-tab="io" data-i18n="tab_io" onclick="showTab('io')">インポート/エクスポート</button>
+  </nav>
+
+  <!-- Review Tab -->
+  <main id="tab-review" class="tab-content active">
+    <div id="review-area">
+      <div id="no-review" class="empty-state">
+        <p data-i18n="no_review">今日復習するカードはありません</p>
+      </div>
+      <div id="card-container" style="display:none;">
+        <div class="review-progress">
+          <span id="review-progress-text"></span>
+        </div>
+        <div class="flip-card" id="flip-card" onclick="flipCard()">
+          <div class="flip-card-inner" id="flip-card-inner">
+            <div class="flip-card-front">
+              <p id="card-front-text"></p>
+            </div>
+            <div class="flip-card-back">
+              <p id="card-back-text"></p>
+            </div>
+          </div>
+        </div>
+        <div id="rating-buttons" style="display:none;" class="rating-buttons">
+          <button class="btn btn-forgot" onclick="rateCard(1)" data-i18n="forgot">忘れた</button>
+          <button class="btn btn-fuzzy" onclick="rateCard(2)" data-i18n="fuzzy">あいまい</button>
+          <button class="btn btn-knew" onclick="rateCard(3)" data-i18n="knew">覚えた</button>
+        </div>
+        <p class="hint-text" id="flip-hint" data-i18n="flip_hint">カードをクリックして裏面を見る</p>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label" data-i18n="total_cards">総カード数</span>
+        <span class="stat-value" id="stat-total">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label" data-i18n="due_today">今日の復習</span>
+        <span class="stat-value" id="stat-due">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label" data-i18n="mastered">習得済み</span>
+        <span class="stat-value" id="stat-mastered">0</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Manage Tab -->
+  <main id="tab-manage" class="tab-content">
+    <div class="card-form">
+      <h3 data-i18n="add_card">カードを追加</h3>
+      <label data-i18n="front_label">表面（質問）</label>
+      <textarea id="input-front" rows="3" data-i18n-placeholder="front_placeholder" placeholder="質問を入力"></textarea>
+      <label data-i18n="back_label">裏面（答え）</label>
+      <textarea id="input-back" rows="3" data-i18n-placeholder="back_placeholder" placeholder="答えを入力"></textarea>
+      <button class="btn btn-primary" onclick="addCard()" data-i18n="add_btn">追加</button>
+    </div>
+    <h3 data-i18n="card_list">カード一覧</h3>
+    <div id="card-list" class="card-list"></div>
+  </main>
+
+  <!-- Import/Export Tab -->
+  <main id="tab-io" class="tab-content">
+    <div class="io-section">
+      <h3 data-i18n="export_title">エクスポート</h3>
+      <p data-i18n="export_desc">全カードをJSON形式でダウンロードします。</p>
+      <button class="btn btn-primary" onclick="exportCards()" data-i18n="export_btn">エクスポート</button>
+    </div>
+    <div class="io-section">
+      <h3 data-i18n="import_title">インポート</h3>
+      <p data-i18n="import_desc">JSONファイルからカードを読み込みます。既存カードとマージされます。</p>
+      <input type="file" id="import-file" accept=".json">
+      <button class="btn btn-primary" onclick="importCards()" data-i18n="import_btn">インポート</button>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="kf-footer">
+    <div class="footer-links">
+      <details>
+        <summary data-i18n="about_title">このアプリについて</summary>
+        <p data-i18n="about_description">暗記が苦手な人のための、忘却曲線に基づくスマート暗記カードアプリです。SM-2アルゴリズムを簡易実装し、最適なタイミングで復習を促します。</p>
+      </details>
+      <details>
+        <summary data-i18n="tech_title">使用技術</summary>
+        <p>HTML + CSS + JavaScript (Vanilla) / SM-2 Spaced Repetition Algorithm / LocalStorage</p>
+      </details>
+      <a href="https://kaleidofuture.com" target="_blank" rel="noopener">KaleidoFuture</a>
+    </div>
+    <div class="footer-copy">KaleidoFuture — Built with AI-driven development, powered by existing libraries</div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
