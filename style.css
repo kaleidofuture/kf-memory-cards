@@ -112,6 +112,14 @@ body {
 .hint-text { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 8px; }
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 1.1rem; }
 
+/* === Swipe Hint === */
+.swipe-hint {
+  text-align: center;
+  color: #999;
+  font-size: 0.8rem;
+  margin-top: 12px;
+}
+
 /* === Stats === */
 .stats-bar {
   display: flex;

@@ -385,6 +385,40 @@ function importCards() {
   reader.readAsText(file);
 }
 
+// --- Swipe Detection ---
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.addEventListener('touchstart', (e) => {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  const deltaX = e.changedTouches[0].screenX - touchStartX;
+  const deltaY = e.changedTouches[0].screenY - touchStartY;
+  const minSwipe = 50;
+
+  // Only process swipe during review mode when cards are shown and flipped
+  const reviewTab = document.getElementById('tab-review');
+  if (!reviewTab || !reviewTab.classList.contains('active')) return;
+  if (reviewQueue.length === 0 || reviewIndex >= reviewQueue.length) return;
+  if (!isFlipped) return;
+
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipe) {
+    if (deltaX > 0) {
+      // Right swipe = knew it
+      rateCard(3);
+    } else {
+      // Left swipe = forgot
+      rateCard(1);
+    }
+  } else if (deltaY < -minSwipe && Math.abs(deltaY) > Math.abs(deltaX)) {
+    // Up swipe = fuzzy
+    rateCard(2);
+  }
+}, { passive: true });
+
 // --- Tab Navigation ---
 function showTab(tabName) {
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
