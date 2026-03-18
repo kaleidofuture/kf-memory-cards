@@ -30,6 +30,13 @@
 
   <!-- Review Tab -->
   <main id="tab-review" class="tab-content active">
+    <!-- Reverse Mode Toggle -->
+    <div style="text-align:right; padding:8px 16px 0;">
+      <label style="font-size:0.85rem; cursor:pointer;">
+        <input type="checkbox" id="reverse-toggle" onchange="toggleReverseMode()">
+        <span data-i18n="reverse_mode">リバースモード（裏→表）</span>
+      </label>
+    </div>
     <div id="review-area">
       <div id="no-review" class="empty-state">
         <p data-i18n="no_review">今日復習するカードはありません</p>
@@ -95,10 +102,16 @@
       <button class="btn btn-primary" onclick="exportCards()" data-i18n="export_btn">エクスポート</button>
     </div>
     <div class="io-section">
-      <h3 data-i18n="import_title">インポート</h3>
+      <h3 data-i18n="import_title">インポート（JSON）</h3>
       <p data-i18n="import_desc">JSONファイルからカードを読み込みます。既存カードとマージされます。</p>
       <input type="file" id="import-file" accept=".json">
       <button class="btn btn-primary" onclick="importCards()" data-i18n="import_btn">インポート</button>
+    </div>
+    <div class="io-section">
+      <h3 data-i18n="bulk_import_title">テキスト一括インポート</h3>
+      <p data-i18n="bulk_import_desc">「Q: 質問」「A: 答え」の形式で貼り付けてください。1組ずつ改行で区切ります。</p>
+      <textarea id="bulk-import-text" rows="8" data-i18n-placeholder="bulk_import_placeholder" placeholder="Q: 日本の首都は？&#10;A: 東京&#10;&#10;Q: フランスの首都は？&#10;A: パリ" style="width:100%; font-family:inherit; font-size:0.95rem; padding:8px; border:1px solid #ddd; border-radius:6px;"></textarea>
+      <button class="btn btn-primary" onclick="bulkImportCards()" data-i18n="bulk_import_btn" style="margin-top:8px;">一括インポート</button>
     </div>
   </main>
 
